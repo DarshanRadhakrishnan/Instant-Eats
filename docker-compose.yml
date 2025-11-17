@@ -1,0 +1,239 @@
+version: '3.9'
+
+services:
+  # PostgreSQL Shards
+  postgres-shard-a:
+    image: postgres:15-alpine
+    container_name: postgres-shard-a
+    environment:
+      POSTGRES_DB: shard_a
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-shard-a-data:/var/lib/postgresql/data
+    networks:
+      - instant-eats-network
+
+  postgres-shard-b:
+    image: postgres:15-alpine
+    container_name: postgres-shard-b
+    environment:
+      POSTGRES_DB: shard_b
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres-shard-b-data:/var/lib/postgresql/data
+    networks:
+      - instant-eats-network
+
+  postgres-shard-c:
+    image: postgres:15-alpine
+    container_name: postgres-shard-c
+    environment:
+      POSTGRES_DB: shard_c
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres-shard-c-data:/var/lib/postgresql/data
+    networks:
+      - instant-eats-network
+
+  # MongoDB (Restaurant metadata)
+  mongodb:
+    image: mongo:6
+    container_name: mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb-data:/data/db
+    networks:
+      - instant-eats-network
+
+  # Redis (Caching & Pub/Sub)
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - instant-eats-network
+
+  # RabbitMQ (Message Queue)
+  rabbitmq:
+    image: rabbitmq:3.12-management-alpine
+    container_name: rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    networks:
+      - instant-eats-network
+
+  # API Gateway
+  api-gateway:
+    build:
+      context: ./services/api-gateway
+      dockerfile: Dockerfile
+    container_name: api-gateway
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      POSTGRES_SHARD_A_URL: postgresql://postgres:postgres@postgres-shard-a:5432/shard_a
+      POSTGRES_SHARD_B_URL: postgresql://postgres:postgres@postgres-shard-b:5432/shard_b
+      POSTGRES_SHARD_C_URL: postgresql://postgres:postgres@postgres-shard-c:5432/shard_c
+      REDIS_URL: redis://redis:6379
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+    ports:
+      - "3000:3000"
+    depends_on:
+      - postgres-shard-a
+      - postgres-shard-b
+      - postgres-shard-c
+      - redis
+      - rabbitmq
+    networks:
+      - instant-eats-network
+
+  # Auth Service
+  auth-service:
+    build:
+      context: ./services/auth-service
+      dockerfile: Dockerfile
+    container_name: auth-service
+    environment:
+      NODE_ENV: development
+      PORT: 3001
+      POSTGRES_SHARD_A_URL: postgresql://postgres:postgres@postgres-shard-a:5432/shard_a
+      POSTGRES_SHARD_B_URL: postgresql://postgres:postgres@postgres-shard-b:5432/shard_b
+      POSTGRES_SHARD_C_URL: postgresql://postgres:postgres@postgres-shard-c:5432/shard_c
+      JWT_SECRET: your-secret-key-change-in-production
+    ports:
+      - "3001:3001"
+    depends_on:
+      - postgres-shard-a
+      - postgres-shard-b
+      - postgres-shard-c
+    networks:
+      - instant-eats-network
+
+  # Order Service
+  order-service:
+    build:
+      context: ./services/order-service
+      dockerfile: Dockerfile
+    container_name: order-service
+    environment:
+      NODE_ENV: development
+      PORT: 3002
+      POSTGRES_SHARD_A_URL: postgresql://postgres:postgres@postgres-shard-a:5432/shard_a
+      POSTGRES_SHARD_B_URL: postgresql://postgres:postgres@postgres-shard-b:5432/shard_b
+      POSTGRES_SHARD_C_URL: postgresql://postgres:postgres@postgres-shard-c:5432/shard_c
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+    ports:
+      - "3002:3002"
+    depends_on:
+      - postgres-shard-a
+      - postgres-shard-b
+      - postgres-shard-c
+      - rabbitmq
+    networks:
+      - instant-eats-network
+
+  # Restaurant Service
+  restaurant-service:
+    build:
+      context: ./services/restaurant-service
+      dockerfile: Dockerfile
+    container_name: restaurant-service
+    environment:
+      NODE_ENV: development
+      PORT: 3003
+      MONGODB_URL: mongodb://root:mongodb@mongodb:27017/restaurants?authSource=admin
+    ports:
+      - "3003:3003"
+    depends_on:
+      - mongodb
+    networks:
+      - instant-eats-network
+
+  # Delivery Service
+  delivery-service:
+    build:
+      context: ./services/delivery-service
+      dockerfile: Dockerfile
+    container_name: delivery-service
+    environment:
+      NODE_ENV: development
+      PORT: 3004
+      POSTGRES_SHARD_A_URL: postgresql://postgres:postgres@postgres-shard-a:5432/shard_a
+      POSTGRES_SHARD_B_URL: postgresql://postgres:postgres@postgres-shard-b:5432/shard_b
+      POSTGRES_SHARD_C_URL: postgresql://postgres:postgres@postgres-shard-c:5432/shard_c
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+    ports:
+      - "3004:3004"
+    depends_on:
+      - postgres-shard-a
+      - postgres-shard-b
+      - postgres-shard-c
+      - rabbitmq
+    networks:
+      - instant-eats-network
+
+  # Tracking Service
+  tracking-service:
+    build:
+      context: ./services/tracking-service
+      dockerfile: Dockerfile
+    container_name: tracking-service
+    environment:
+      NODE_ENV: development
+      PORT: 3005
+      REDIS_URL: redis://redis:6379
+    ports:
+      - "3005:3005"
+    depends_on:
+      - redis
+    networks:
+      - instant-eats-network
+
+  # Nginx Load Balancer
+  nginx:
+    image: nginx:alpine
+    container_name: nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - api-gateway
+      - tracking-service
+    networks:
+      - instant-eats-network
+
+networks:
+  instant-eats-network:
+    driver: bridge
+
+volumes:
+  postgres-shard-a-data:
+  postgres-shard-b-data:
+  postgres-shard-c-data:
+  mongodb-data:
+  redis-data:
+  rabbitmq-data:

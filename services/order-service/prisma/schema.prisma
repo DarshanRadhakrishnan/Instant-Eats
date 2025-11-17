@@ -1,0 +1,24 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Order {
+  id                    String   @id
+  customerId            String
+  restaurantId          String
+  deliveryPartnerId     String?
+  status                String   // 'pending', 'confirmed', 'preparing', 'ready', 'picked_up', 'in_transit', 'delivered', 'cancelled'
+  totalAmount           Float
+  deliveryAddress       String
+  city                  String
+  latitude              Float
+  longitude             Float
+  estimatedDeliveryTime Int      // in minutes
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+}

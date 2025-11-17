@@ -1,0 +1,35 @@
+{
+  "name": "auth-service",
+  "version": "1.0.0",
+  "description": "Authentication service for Instant Eats delivery platform",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "ts-node src/index.ts",
+    "dev:watch": "nodemon --exec ts-node src/index.ts",
+    "prisma:migrate:shardA": "prisma migrate dev --schema=prisma/shardA/schema.prisma",
+    "prisma:migrate:shardB": "prisma migrate dev --schema=prisma/shardB/schema.prisma",
+    "prisma:migrate:shardC": "prisma migrate dev --schema=prisma/shardC/schema.prisma"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.0",
+    "bcryptjs": "^2.4.3",
+    "@prisma/client": "^5.1.1",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.17",
+    "@types/node": "^20.3.1",
+    "@types/jsonwebtoken": "^9.0.2",
+    "@types/bcryptjs": "^2.4.2",
+    "typescript": "^5.1.3",
+    "ts-node": "^10.9.1",
+    "nodemon": "^3.0.1",
+    "prisma": "^5.1.1"
+  }
+}

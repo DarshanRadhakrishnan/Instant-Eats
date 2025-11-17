@@ -1,0 +1,23 @@
+// For simplicity, using a single shared Prisma schema
+// In production, you might want separate migration files per shard
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  firstName String
+  lastName  String
+  phoneNumber String
+  role      String   // 'customer', 'restaurant', 'delivery_partner', 'admin'
+  city      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
