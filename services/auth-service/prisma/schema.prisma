@@ -1,5 +1,8 @@
-// For simplicity, using a single shared Prisma schema
-// In production, you might want separate migration files per shard
+// Three-Tier User Registration System
+// Customers: OAuth + Email/Password (Fast)
+// Restaurant Owners: Multi-step verification (Strict)
+// Delivery Partners: Document + Background verification (Strict)
+
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
@@ -10,14 +13,202 @@ generator client {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  password  String
-  firstName String
-  lastName  String
-  phoneNumber String
-  role      String   // 'customer', 'restaurant', 'delivery_partner', 'admin'
-  city      String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                String    @id @default(cuid())
+  email             String    @unique
+  password          String    // Empty for OAuth users
+  firstName         String
+  lastName          String
+  phoneNumber       String?
+  role              String    // 'customer', 'restaurant_owner', 'delivery_partner', 'admin'
+  city              String
+  
+  // OAuth Fields
+  googleId          String?   @unique
+  authProvider      String?   // 'local', 'google'
+  profilePicture    String?
+  emailVerified     Boolean   @default(false)
+  
+  // Account Status
+  accountStatus     String    @default("pending") // active, pending, suspended, rejected
+  
+  // Relations
+  restaurantProfile RestaurantProfile?
+  deliveryProfile   DeliveryPartnerProfile?
+  
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+}
+
+// ==================== RESTAURANT OWNER ====================
+model RestaurantProfile {
+  id                String    @id @default(cuid())
+  userId            String    @unique
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Step 2: Business Information
+  restaurantName    String
+  businessType      String    // 'restaurant', 'cloud_kitchen', 'cafe', 'bakery', 'fast_food'
+  cuisine           String[]  // ['Indian', 'Chinese', 'Italian']
+  description       String?
+  
+  // Primary Location
+  address           String
+  city              String
+  state             String
+  pincode           String
+  latitude          Float?
+  longitude         Float?
+  
+  // Contact
+  businessPhone     String
+  businessEmail     String
+  
+  // Operating Hours
+  openingTime       String    // "09:00"
+  closingTime       String    // "22:00"
+  workingDays       String[]  // ['Monday', 'Tuesday', ...]
+  
+  // Owner Details
+  ownerName         String
+  ownerPhone        String
+  ownerEmail        String
+  ownerAadhar       String?   // Encrypted
+  
+  // Step 3: Documents (stored as URLs)
+  fssaiLicense      String?   // FSSAI certificate URL
+  fssaiNumber       String?
+  fssaiExpiry       DateTime?
+  gstNumber         String?
+  gstCertificate    String?
+  panCard           String?
+  shopEstablishment String?   // Shop & Establishment certificate
+  
+  // Step 4: Bank Details
+  bankAccountName   String?
+  bankAccountNumber String?   // Encrypted
+  ifscCode          String?
+  bankName          String?
+  branchName        String?
+  
+  // Verification Status
+  verificationStatus String  @default("pending") // pending, documents_submitted, under_review, approved, rejected
+  rejectionReason   String?
+  verifiedAt        DateTime?
+  verifiedBy        String?   // Admin user ID
+  
+  // Additional
+  restaurantImages  String[]  // Array of image URLs
+  menuPDF           String?   // URL to menu PDF
+  
+  branches          RestaurantBranch[]
+  
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+}
+
+model RestaurantBranch {
+  id                String    @id @default(cuid())
+  restaurantProfileId String
+  restaurantProfile RestaurantProfile @relation(fields: [restaurantProfileId], references: [id], onDelete: Cascade)
+  
+  branchName        String
+  address           String
+  city              String
+  state             String
+  pincode           String
+  latitude          Float?
+  longitude         Float?
+  phone             String
+  
+  managerName       String
+  managerPhone      String
+  
+  isActive          Boolean   @default(false)
+  
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+}
+
+// ==================== DELIVERY PARTNER ====================
+model DeliveryPartnerProfile {
+  id                String    @id @default(cuid())
+  userId            String    @unique
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Step 2: Personal Details
+  fullName          String
+  dateOfBirth       DateTime?
+  gender            String?   // 'male', 'female', 'other'
+  aadharNumber      String    // Encrypted
+  panNumber         String?   // Encrypted
+  
+  // Address
+  currentAddress    String
+  permanentAddress  String?
+  city              String
+  state             String
+  pincode           String
+  
+  // Emergency Contact
+  emergencyName     String?
+  emergencyRelation String?
+  emergencyPhone    String?
+  
+  // Step 3: Vehicle Details
+  vehicleType       String    // 'bike', 'scooter', 'cycle', 'car'
+  vehicleNumber     String
+  vehicleModel      String
+  vehicleYear       Int
+  
+  // License Details
+  drivingLicense    String    // Encrypted
+  licenseExpiry     DateTime
+  
+  // Step 4: Documents
+  aadharFront       String?   // URL
+  aadharBack        String?
+  panCard           String?
+  licenseFront      String?
+  licenseBack       String?
+  vehicleRC         String?   // Registration Certificate
+  vehicleInsurance  String?
+  insuranceExpiry   DateTime?
+  photo             String?
+  
+  // Step 5: Bank Details
+  bankAccountName   String?
+  bankAccountNumber String?   // Encrypted
+  ifscCode          String?
+  upiId             String?
+  
+  // Step 6: Background Check
+  policeVerification String  @default("pending") // pending, initiated, completed, failed
+  backgroundCheckStatus String  @default("pending")
+  
+  // Training
+  trainingCompleted Boolean  @default(false)
+  trainingDate      DateTime?
+  
+  // Verification
+  verificationStatus String  @default("pending") // pending, documents_submitted, under_review, approved, rejected
+  rejectionReason   String?
+  verifiedAt        DateTime?
+  verifiedBy        String?
+  
+  // Operational
+  isAvailable       Boolean   @default(false)
+  currentLatitude   Float?
+  currentLongitude  Float?
+  currentOrderId    String?
+  
+  // Performance
+  totalDeliveries   Int       @default(0)
+  rating            Float     @default(0)
+  earningsTotal     Float     @default(0)
+  
+  // Status
+  accountStatus     String    @default("inactive") // inactive, active, suspended, deactivated
+  
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 }
