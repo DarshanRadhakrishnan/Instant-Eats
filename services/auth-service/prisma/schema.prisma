@@ -31,9 +31,19 @@ model User {
   // Account Status
   accountStatus     String    @default("pending") // active, pending, suspended, rejected
   
+  // Security Fields
+  twoFactorEnabled  Boolean   @default(false)
+  twoFactorSecret   String?
+  lastLogin         DateTime?
+  lastLoginIp       String?
+  failedLoginAttempts Int     @default(0)
+  accountLockedUntil DateTime?
+  
   // Relations
   restaurantProfile RestaurantProfile?
   deliveryProfile   DeliveryPartnerProfile?
+  refreshTokens     RefreshToken[]
+  loginHistory      LoginHistory[]
   
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
@@ -127,6 +137,50 @@ model RestaurantBranch {
   
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
+}
+
+// ==================== TOKEN & SESSION MANAGEMENT ====================
+model RefreshToken {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  token         String   @unique // Hashed refresh token
+  deviceInfo    String?  // "Chrome on Windows", "Mobile App iOS"
+  ipAddress     String?
+  userAgent     String?
+  
+  expiresAt     DateTime
+  createdAt     DateTime @default(now())
+  lastUsedAt    DateTime @default(now())
+  
+  isRevoked     Boolean  @default(false)
+  revokedAt     DateTime?
+  revokedReason String?  // "user_logout", "suspicious_activity", "admin_action"
+  
+  @@index([userId])
+  @@index([token])
+}
+
+model LoginHistory {
+  id            String   @id @default(cuid())
+  userId        String?
+  user          User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  email         String
+  success       Boolean
+  failureReason String?  // "invalid_password", "account_locked", "invalid_email"
+  
+  ipAddress     String
+  userAgent     String?
+  deviceInfo    String?
+  location      String?
+  
+  timestamp     DateTime @default(now())
+  
+  @@index([userId])
+  @@index([email])
+  @@index([timestamp])
 }
 
 // ==================== DELIVERY PARTNER ====================
