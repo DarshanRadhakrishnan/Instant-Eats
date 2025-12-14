@@ -235,6 +235,36 @@ services:
     networks:
       - instant-eats-network
 
+  # Admin Dashboard Service
+  admin-dashboard:
+    build:
+      context: ./services/admin-dashboard
+      dockerfile: Dockerfile
+    container_name: admin-dashboard
+    environment:
+      NODE_ENV: development
+      PORT: 3006
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    ports:
+      - "3006:3006"
+    depends_on:
+      - redis
+      - api-gateway
+      - auth-service
+      - order-service
+      - restaurant-service
+      - delivery-service
+      - tracking-service
+    networks:
+      - instant-eats-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3006/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
   # Nginx Load Balancer
   nginx:
     image: nginx:alpine
@@ -247,6 +277,7 @@ services:
     depends_on:
       - api-gateway
       - tracking-service
+      - admin-dashboard
     networks:
       - instant-eats-network
 
