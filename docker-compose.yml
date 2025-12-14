@@ -68,6 +68,12 @@ services:
       - redis-data:/data
     networks:
       - instant-eats-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   # RabbitMQ (Message Queue)
   rabbitmq:
@@ -104,7 +110,12 @@ services:
       POSTGRES_SHARD_A_URL: postgresql://postgres:postgres@postgres-shard-a:5432/shard_a
       POSTGRES_SHARD_B_URL: postgresql://postgres:postgres@postgres-shard-b:5432/shard_b
       POSTGRES_SHARD_C_URL: postgresql://postgres:postgres@postgres-shard-c:5432/shard_c
-      REDIS_URL: redis://redis:6379
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      CACHE_TTL: 300
+      CIRCUIT_BREAKER_TIMEOUT: 10000
+      CIRCUIT_BREAKER_ERROR_THRESHOLD: 50
+      CIRCUIT_BREAKER_RESET_TIMEOUT: 30000
       RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
     # Internal access only - Nginx handles public traffic
     depends_on:
