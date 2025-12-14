@@ -7,7 +7,7 @@ const router = Router();
 router.get('/assignments', async (req: Request, res: Response) => {
   try {
     const query = new URLSearchParams(req.query as Record<string, string>).toString();
-    const response = await forwardRequest('delivery-service', 3004, 'GET', `/assignments?${query}`, null);
+    const response = await forwardRequest('delivery-service', 3004, 'GET', '/assignments', null, query);
     res.status(response.status).json(response.data);
   } catch (error) {
     res.status(500).json({ success: false, error: 'Failed to fetch assignments' });

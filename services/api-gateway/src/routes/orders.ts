@@ -15,7 +15,7 @@ router.post('/', async (req: Request, res: Response) => {
 
 router.get('/:id', async (req: Request, res: Response) => {
   try {
-    const response = await forwardRequest('order-service', 3002, 'GET', `/${req.params.id}`, null);
+    const response = await forwardRequest('order-service', 3002, 'GET', `/${req.params.id}`, null, '');
     res.status(response.status).json(response.data);
   } catch (error) {
     res.status(500).json({ success: false, error: 'Failed to fetch order' });
@@ -25,7 +25,7 @@ router.get('/:id', async (req: Request, res: Response) => {
 router.get('/', async (req: Request, res: Response) => {
   try {
     const query = new URLSearchParams(req.query as Record<string, string>).toString();
-    const response = await forwardRequest('order-service', 3002, 'GET', `/?${query}`, null);
+    const response = await forwardRequest('order-service', 3002, 'GET', '/', null, query);
     res.status(response.status).json(response.data);
   } catch (error) {
     res.status(500).json({ success: false, error: 'Failed to fetch orders' });

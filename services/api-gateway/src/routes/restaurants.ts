@@ -7,7 +7,7 @@ const router = Router();
 router.get('/', async (req: Request, res: Response) => {
   try {
     const query = new URLSearchParams(req.query as Record<string, string>).toString();
-    const response = await forwardRequest('restaurant-service', 3003, 'GET', `/?${query}`, null);
+    const response = await forwardRequest('restaurant-service', 3003, 'GET', '/', null, query);
     res.status(response.status).json(response.data);
   } catch (error) {
     res.status(500).json({ success: false, error: 'Failed to fetch restaurants' });
@@ -16,7 +16,7 @@ router.get('/', async (req: Request, res: Response) => {
 
 router.get('/:id', async (req: Request, res: Response) => {
   try {
-    const response = await forwardRequest('restaurant-service', 3003, 'GET', `/${req.params.id}`, null);
+    const response = await forwardRequest('restaurant-service', 3003, 'GET', `/${req.params.id}`, null, '');
     res.status(response.status).json(response.data);
   } catch (error) {
     res.status(500).json({ success: false, error: 'Failed to fetch restaurant' });
@@ -25,7 +25,7 @@ router.get('/:id', async (req: Request, res: Response) => {
 
 router.get('/:id/menu', async (req: Request, res: Response) => {
   try {
-    const response = await forwardRequest('restaurant-service', 3003, 'GET', `/${req.params.id}/menu`, null);
+    const response = await forwardRequest('restaurant-service', 3003, 'GET', `/${req.params.id}/menu`, null, '');
     res.status(response.status).json(response.data);
   } catch (error) {
     res.status(500).json({ success: false, error: 'Failed to fetch menu' });
