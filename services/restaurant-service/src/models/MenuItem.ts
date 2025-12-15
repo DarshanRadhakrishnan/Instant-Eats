@@ -24,4 +24,9 @@ const menuItemSchema = new Schema<IMenuItem>(
   { timestamps: true }
 );
 
+// Strategic indexes for performance optimization
+menuItemSchema.index({ restaurantId: 1, isAvailable: 1 }); // Menu items by restaurant & availability
+menuItemSchema.index({ category: 1, restaurantId: 1 }); // Filter by category
+menuItemSchema.index({ price: 1 }); // Price filtering/sorting
+
 export const MenuItem = mongoose.model<IMenuItem>('MenuItem', menuItemSchema);
