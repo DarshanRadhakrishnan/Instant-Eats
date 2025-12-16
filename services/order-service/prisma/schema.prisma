@@ -62,3 +62,191 @@ model OrderCancellation {
   @@index([cancelledBy])
   @@index([createdAt])
 }
+
+model OrderMetrics {
+  id                    String   @id @default(cuid())
+  customerId            String
+  
+  // Spending metrics
+  totalSpent            Float    @default(0)
+  totalOrders           Int      @default(0)
+  averageOrderValue     Float    @default(0)
+  highestOrderValue     Float    @default(0)
+  lowestOrderValue      Float    @default(0)
+  
+  // Frequency metrics
+  ordersThisMonth       Int      @default(0)
+  ordersThisWeek        Int      @default(0)
+  ordersThisYear        Int      @default(0)
+  lastOrderDate         DateTime?
+  firstOrderDate        DateTime?
+  
+  // Cancellation metrics
+  totalCancelled        Int      @default(0)
+  cancellationRate      Float    @default(0)
+  lastCancelledDate     DateTime?
+  
+  // Delivery metrics
+  averageDeliveryTime   Int      @default(0)
+  fastestDelivery       Int?
+  slowestDelivery       Int?
+  
+  // Preference metrics
+  favoriteRestaurantId  String?
+  favoriteRestaurantName String?
+  favoriteCity          String?
+  
+  // Engagement metrics
+  repeatCustomer        Boolean  @default(false)
+  loyaltyTier           String   @default("BRONZE")  // BRONZE, SILVER, GOLD, PLATINUM
+  
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  
+  @@unique([customerId])
+  @@index([customerId])
+  @@index([loyaltyTier])
+  @@index([totalSpent])
+}
+
+model DishMetrics {
+  id                    String   @id @default(cuid())
+  restaurantId          String
+  dishName              String
+  dishId                String
+  
+  // Popularity metrics
+  totalOrdered          Int      @default(0)
+  likeCount             Int      @default(0)
+  dislikeCount          Int      @default(0)
+  likePercentage        Float    @default(0)
+  
+  // Revenue metrics
+  totalRevenue          Float    @default(0)
+  averageDishPrice      Float    @default(0)
+  
+  // Engagement metrics
+  addedToCartCount      Int      @default(0)
+  removedFromCartCount  Int      @default(0)
+  conversionRate        Float    @default(0)
+  
+  // Trend metrics
+  ordersThisMonth       Int      @default(0)
+  ordersThisWeek        Int      @default(0)
+  monthlyTrend          Float    @default(0)  // percentage change from prev month
+  
+  lastOrderedDate       DateTime?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  
+  @@unique([restaurantId, dishId])
+  @@index([restaurantId])
+  @@index([totalOrdered])
+  @@index([likePercentage])
+}
+
+model RestaurantMetrics {
+  id                    String   @id @default(cuid())
+  restaurantId          String
+  
+  // Order metrics
+  totalOrders           Int      @default(0)
+  totalRevenue          Float    @default(0)
+  averageOrderValue     Float    @default(0)
+  
+  // Customer metrics
+  uniqueCustomers       Int      @default(0)
+  repeatCustomers       Int      @default(0)
+  
+  // Rating metrics
+  averageRating         Float    @default(0)
+  totalRatings          Int      @default(0)
+  
+  // Cancellation metrics
+  cancellationRate      Float    @default(0)
+  totalCancellations    Int      @default(0)
+  
+  // Delivery metrics
+  averageDeliveryTime   Int      @default(0)
+  onTimeDeliveryRate    Float    @default(0)
+  
+  // Popularity metrics
+  topDish               String?
+  topCategory           String?
+  
+  // Time metrics
+  ordersThisMonth       Int      @default(0)
+  revenueThisMonth      Float    @default(0)
+  
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  
+  @@unique([restaurantId])
+  @@index([restaurantId])
+  @@index([totalRevenue])
+}
+
+model CustomerPreferences {
+  id                    String   @id @default(cuid())
+  customerId            String
+  
+  // Category preferences
+  preferredCategories   String[] // JSON array of category names
+  avoidCategories       String[] // Categories they rarely order from
+  
+  // Restaurant preferences
+  frequentRestaurants   String[] // IDs of top 5 restaurants
+  favoriteDeliveryAreas String[] // Cities/areas they order from most
+  
+  // Dietary preferences (if tracked)
+  dietaryTags           String[] // vegan, non-veg, gluten-free, etc.
+  
+  // Ordering patterns
+  preferredTimeSlots    String[] // morning, afternoon, evening, night
+  averageSpendPerOrder  Float    @default(0)
+  
+  // Platform preferences
+  deviceType            String?  // mobile, web, etc.
+  preferredPaymentMode  String?  // card, wallet, cash, etc.
+  
+  updatedAt             DateTime @updatedAt
+  
+  @@unique([customerId])
+  @@index([customerId])
+}
+
+model OrderAnalytics {
+  id                    String   @id @default(cuid())
+  city                  String
+  
+  // Daily metrics
+  ordersToday           Int      @default(0)
+  revenueToday          Float    @default(0)
+  avgOrderValueToday    Float    @default(0)
+  
+  // Monthly metrics
+  ordersThisMonth       Int      @default(0)
+  revenueThisMonth      Float    @default(0)
+  avgOrderValueMonth    Float    @default(0)
+  
+  // Peak metrics
+  peakHour              Int?
+  peakDay               String?  // Monday, Tuesday, etc.
+  
+  // Cancellation metrics
+  cancellationsToday    Int      @default(0)
+  cancellationRate      Float    @default(0)
+  
+  // Popular items
+  trendingDishes        String[] // Top 5 dishes
+  trendingRestaurants   String[] // Top 5 restaurants
+  
+  // Performance metrics
+  avgDeliveryTime       Int      @default(0)
+  onTimeDeliveryRate    Float    @default(0)
+  
+  lastUpdated           DateTime @default(now())
+  
+  @@unique([city])
+  @@index([city])
+}
