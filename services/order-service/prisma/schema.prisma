@@ -21,4 +21,44 @@ model Order {
   estimatedDeliveryTime Int      // in minutes
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
+  cancellation          OrderCancellation?
+  
+  @@index([customerId])
+  @@index([status])
+  @@index([city])
+  @@index([createdAt])
+}
+
+model CancellationPolicy {
+  id                  String   @id @default(cuid())
+  status              String   // 'pending', 'confirmed', 'preparing', 'ready', 'picked_up'
+  maxCancellationTime Int      // in minutes from order creation
+  refundPercentage    Float    // 0-100
+  cancellationFee     Float    // absolute fee to deduct
+  description         String?
+  isActive            Boolean  @default(true)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  
+  @@unique([status])
+  @@index([isActive])
+}
+
+model OrderCancellation {
+  id                String   @id @default(cuid())
+  orderId           String   @unique
+  order             Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  cancelledBy       String   // 'customer' or 'restaurant'
+  cancelledAt       DateTime
+  reason            String?
+  refundAmount      Float    // amount refunded to customer
+  refundPercentage  Float    // percentage of total amount
+  cancellationFee   Float    // fee deducted from refund
+  paymentRefundId   String?  // reference to payment service refund ID
+  notificationSent  Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  
+  @@index([orderId])
+  @@index([cancelledBy])
+  @@index([createdAt])
 }

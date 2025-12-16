@@ -38,13 +38,25 @@ export namespace OrderEvents {
     longitude: number;
     updatedAt: Date;
   }
+
+  export interface OrderCancelledEvent {
+    eventType: 'order.cancelled';
+    orderId: string;
+    customerId: string;
+    restaurantId: string;
+    refundAmount: number;
+    cancelledBy: string;
+    reason: string;
+    timestamp: Date;
+  }
 }
 
 export type OrderEvent = 
   | OrderEvents.OrderCreatedEvent 
   | OrderEvents.OrderAssignedEvent 
   | OrderEvents.OrderStatusUpdatedEvent 
-  | OrderEvents.DeliveryLocationUpdatedEvent;
+  | OrderEvents.DeliveryLocationUpdatedEvent
+  | OrderEvents.OrderCancelledEvent;
 
 export namespace RestaurantEvents {
   export interface RestaurantCreatedEvent {
