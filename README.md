@@ -235,6 +235,20 @@ Log cancellation in OrderCancellation table
     ↓
 Return refund confirmation to customer
 
+## Major Update in Inter Service Communication
+
+Currently four different forms of communications occur :
+1)HTTP/HTTPS Synchronous Requests by the frontend clients to a set of services like Hotels,Ordering,Login etc..
+2)RabbitQ Event Driven Architecture for the order.events to maintain and trigger the functions of each service based on the phase of the order in its lifecycle
+3)Socket IO room is created between the user and the Updates from the Redis Cache uploaded by the Delivery Service after specific time intervals in REAL TIME
+4)Direct Inter-Service HTTP Calls where the order service makes direct axios calls to Notification and the payment service
+
+NOW WE UPDATE THESE TO GRPC protocol forms
+
+
+
+
+
 ## License
 
 MIT
