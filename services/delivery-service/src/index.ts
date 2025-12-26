@@ -1,9 +1,22 @@
 import express from 'express';
 import { connectRabbitMQ } from './services/rabbitmqService';
 import { getPrismaClient } from './services/prismaService';
+import { setupSwagger } from '../../../shared/openapi/setup';
+import './openapi';
 
 const app = express();
 app.use(express.json());
+
+// Setup Swagger/OpenAPI documentation
+setupSwagger({
+  app,
+  title: 'Delivery Service',
+  description: 'Manages delivery partner assignments, real-time location tracking, and delivery status updates via OpenAPI',
+  version: '1.0.0',
+  serviceName: 'delivery-service',
+  port: 3004,
+  docsPath: '/api-docs',
+});
 
 let rabbitmqConnected = false;
 

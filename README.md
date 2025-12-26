@@ -216,6 +216,25 @@ All services read from `.env` file. Key configurations:
 - [ ] Implement API request authentication at gateway
 - [ ] Add comprehensive error handling
 
+## Major Updates
+User requests cancellation
+    ↓
+GET /orders/:id/cancellation-info (check eligibility)
+    ↓
+DELETE /orders/:id/cancel (process cancellation)
+    ↓
+Calculate refund based on time elapsed + status
+    ↓
+Call Payment Service → Process refund
+    ↓
+Update order status to CANCELLED
+    ↓
+Call Notification Service → Notify all parties
+    ↓
+Log cancellation in OrderCancellation table
+    ↓
+Return refund confirmation to customer
+
 ## License
 
 MIT

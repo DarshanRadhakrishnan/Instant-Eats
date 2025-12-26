@@ -4,9 +4,23 @@ import axios from 'axios';
 import { connectRabbitMQ, publishEvent } from './services/rabbitmqService';
 import { getPrismaClient } from './services/prismaService';
 import { OrderEvents } from '../../../shared/events/types';
+import { setupSwagger } from '../../../shared/openapi/setup';
+import { OpenAPIServiceClient, serviceClientFactory } from '../../../shared/openapi/client';
+import './openapi';
 
 const app = express();
 app.use(express.json());
+
+// Setup Swagger/OpenAPI documentation
+setupSwagger({
+  app,
+  title: 'Order Service',
+  description: 'Manages order creation, updates, cancellations, and smart cancellation policies with service-to-service communication via OpenAPI',
+  version: '1.0.0',
+  serviceName: 'order-service',
+  port: 3002,
+  docsPath: '/api-docs',
+});
 
 let rabbitmqConnected = false;
 

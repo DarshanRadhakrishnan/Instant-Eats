@@ -6,10 +6,23 @@ import { deliveryPartnerRegisterRouter } from './routes/delivery/register';
 import { loginRoute } from './routes/login';
 import { refreshRouter } from './routes/refresh';
 import { logoutRouter } from './routes/logout';
+import { setupSwagger } from '../../../shared/openapi/setup';
+import './openapi';
 
 const app = express();
 
 app.use(express.json());
+
+// Setup Swagger/OpenAPI documentation
+setupSwagger({
+  app,
+  title: 'Authentication Service',
+  description: 'Handles user authentication, registration, and token management for Instant Eats platform. Supports three user types: Customers, Restaurant Owners, and Delivery Partners.',
+  version: '1.0.0',
+  serviceName: 'auth-service',
+  port: 3001,
+  docsPath: '/api-docs',
+});
 
 // Health check
 app.get('/health', (req, res) => {

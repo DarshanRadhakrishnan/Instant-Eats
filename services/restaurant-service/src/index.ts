@@ -10,9 +10,22 @@ import {
   determineCertificationLevel,
   isHealthyRestaurant,
 } from './integrations/healthAuth';
+import { setupSwagger } from '../../../shared/openapi/setup';
+import './openapi';
 
 const app = express();
 app.use(express.json());
+
+// Setup Swagger/OpenAPI documentation
+setupSwagger({
+  app,
+  title: 'Restaurant Service',
+  description: 'Manages restaurant information, menus, and operations with OpenAPI integration for easy service discovery',
+  version: '1.0.0',
+  serviceName: 'restaurant-service',
+  port: 3003,
+  docsPath: '/api-docs',
+});
 
 // MongoDB Connection with pooling optimization
 async function connectMongoDB() {

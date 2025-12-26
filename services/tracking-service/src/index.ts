@@ -2,6 +2,8 @@ import express from 'express';
 import { createServer } from 'http';
 import { Server as SocketServer, Socket } from 'socket.io';
 import { connectRedis, setLocation, publishLocationUpdate, getRedisClient } from './services/redisService';
+import { setupSwagger } from '../../../shared/openapi/setup';
+import './openapi';
 
 const app = express();
 const httpServer = createServer(app);
@@ -13,6 +15,17 @@ const io = new SocketServer(httpServer, {
 });
 
 app.use(express.json());
+
+// Setup Swagger/OpenAPI documentation
+setupSwagger({
+  app,
+  title: 'Tracking Service',
+  description: 'Real-time delivery tracking via WebSocket and REST API with OpenAPI specifications',
+  version: '1.0.0',
+  serviceName: 'tracking-service',
+  port: 3005,
+  docsPath: '/api-docs',
+});
 
 // Health check endpoint
 app.get('/health', (_req, res) => {

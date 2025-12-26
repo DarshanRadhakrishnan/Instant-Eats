@@ -8,6 +8,8 @@ import { restaurantRoutes } from './routes/restaurants';
 import { deliveryRoutes } from './routes/delivery';
 import { initializeRedis } from './utils/cache';
 import { getAllCircuitBreakerStats } from './utils/circuitBreaker';
+import { setupSwagger } from '../../../shared/openapi/setup';
+import './openapi';
 
 const app = express();
 
@@ -15,6 +17,17 @@ const app = express();
 app.use(express.json());
 app.use(requestLogger);
 app.use(cacheHeadersMiddleware);
+
+// Setup Swagger/OpenAPI documentation
+setupSwagger({
+  app,
+  title: 'API Gateway',
+  description: 'Central gateway for Instant Eats platform with circuit breakers, caching, and request routing to microservices',
+  version: '1.0.0',
+  serviceName: 'api-gateway',
+  port: 3000,
+  docsPath: '/api-docs',
+});
 
 // Health check endpoint
 app.get('/health', (req, res) => {
